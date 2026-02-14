@@ -28,6 +28,13 @@ export default function App() {
           </button>
         </div>
       )}
+
+      <div>
+        {t("agree", {
+          terms: (chunk) => <strong>{chunk}</strong>,
+          privacy: (chunk) => <a>{chunk}</a>,
+        })}
+      </div>
     </div>
   );
 }

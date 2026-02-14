@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export type Primitive = string | number | boolean | null | undefined;
 type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7];
 export type LocaleMessages = Record<string, any>;
@@ -34,11 +36,17 @@ export type DeepValue<T, K extends string, Depth extends number = 5> = [
         ? T[K]
         : never;
 
-type ExtractParams<S> = S extends string
-  ? S extends `${string}{${infer P}}${infer R}`
-    ? P | ExtractParams<R>
-    : never
+type ExtractVars<S> = S extends `${string}{${infer P}}${infer R}`
+  ? P | ExtractVars<R>
   : never;
+
+type ExtractTags<S> = S extends `${string}<${infer T}>${infer R}`
+  ? T extends `/${string}`
+    ? ExtractTags<R>
+    : T | ExtractTags<R>
+  : never;
+
+type ExtractParams<S> = ExtractVars<S> | ExtractTags<S>;
 
 export type PluralForms = {
   one?: string;
@@ -57,11 +65,19 @@ type ExtractPluralParams<T> = T extends PluralForms
       | ExtractParams<T["many"]>
   : never;
 
+export type ParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | ((children: ReactNode) => ReactNode);
+
 export type ParamsOf<T, K extends DeepKeys<T>> =
   DeepValue<T, K> extends string
     ? ExtractParams<DeepValue<T, K>> extends never
       ? undefined
-      : Record<ExtractParams<DeepValue<T, K>>, string | number>
+      : Record<ExtractParams<DeepValue<T, K>>, ParamValue>
     : DeepValue<T, K> extends PluralForms
-      ? Record<ExtractPluralParams<DeepValue<T, K>> | "count", string | number>
+      ? Record<ExtractPluralParams<DeepValue<T, K>> | "count", ParamValue>
       : undefined;

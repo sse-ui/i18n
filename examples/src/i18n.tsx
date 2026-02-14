@@ -2,7 +2,7 @@ import { createI18n } from "../../src";
 
 export const { i18n, useTranslation, Provider, useLocale } = createI18n({
   locale: "en",
-  supportedLocales: ["en", "es"],
+  supportedLocales: ["en", "es", "fr"],
   persistKey: "i18n-locale",
   fallbackLocales: ["en"],
   messages: {
@@ -16,6 +16,9 @@ export const { i18n, useTranslation, Provider, useLocale } = createI18n({
         },
         switch: "Switch Language",
       },
+
+      agree:
+        "I accept the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
     },
     // fr: {
     //   app: {
@@ -31,7 +34,7 @@ export const { i18n, useTranslation, Provider, useLocale } = createI18n({
   },
 
   loader: async (locale) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
     const res = await fetch(`/locales/${locale}.json`);
     if (!res.ok) {
       throw new Error(`Failed to load locale ${locale}`);

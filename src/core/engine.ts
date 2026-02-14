@@ -8,11 +8,12 @@ import type {
 import { LocaleStore } from "./store";
 import { interpolate } from "./interpolate";
 import { resolvePlural } from "./plural";
+import { ReactNode } from "react";
 
 interface I18nConfig<T, L extends string> {
   locale: L;
   supportedLocales: readonly L[];
-  messages: Record<string, any>;
+  messages: LocaleMessages;
   fallbackLocales?: L[];
   persistKey?: string;
   loader?: (locale: string) => Promise<any>;
@@ -20,7 +21,7 @@ interface I18nConfig<T, L extends string> {
 
 export class I18n<T extends LocaleMessages, L extends string = string> {
   private locale: L;
-  private messages: Record<string, any>;
+  private messages: LocaleMessages;
   private store = new LocaleStore();
   private config: I18nConfig<T, L>;
   public isLoading = false;
@@ -117,12 +118,12 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
   t<K extends DeepKeys<T>>(
     key: K,
     ...args: ParamsOf<T, K> extends undefined ? [] : [params: ParamsOf<T, K>]
-  ): string {
+  ): ReactNode {
     const msg = this.getMessage(key);
     if (!msg) return key as string;
 
     if (typeof msg === "object" && msg !== null && "other" in msg) {
-      const params = args[0] as Record<string, string | number> | undefined;
+      const params = args[0] as LocaleMessages | undefined;
 
       const pluralTarget = params
         ? (Object.values(params).find((v) => typeof v === "number") ?? 0)
@@ -138,7 +139,7 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
     }
 
     if (typeof msg === "string") {
-      return interpolate(msg, args[0] as ParamsOf<T, K>);
+      return interpolate(msg, args[0] as LocaleMessages);
     }
 
     return key as string;
