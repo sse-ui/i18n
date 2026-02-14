@@ -1,37 +1,117 @@
-import type { DeepKeys, DeepValue, LocaleMessages, ParamsOf } from "./types";
+import type {
+  DeepKeys,
+  DeepValue,
+  LocaleMessages,
+  ParamsOf,
+  PluralForms,
+} from "./types";
 import { LocaleStore } from "./store";
 import { interpolate } from "./interpolate";
-import { resolvePlural, type PluralForms } from "./plural";
+import { resolvePlural } from "./plural";
 
-export class I18n<T extends LocaleMessages> {
-  private locale: string;
-  private messages: Record<string, T>;
+interface I18nConfig<T, L extends string> {
+  locale: L;
+  supportedLocales: readonly L[];
+  messages: Record<string, any>;
+  fallbackLocales?: L[];
+  persistKey?: string;
+  loader?: (locale: string) => Promise<any>;
+}
+
+export class I18n<T extends LocaleMessages, L extends string = string> {
+  private locale: L;
+  private messages: Record<string, any>;
   private store = new LocaleStore();
+  private config: I18nConfig<T, L>;
+  public isLoading = false;
 
-  constructor(locale: string, messages: Record<string, T>) {
-    this.locale = locale;
-    this.messages = messages;
+  constructor(config: I18nConfig<T, L>) {
+    this.config = config;
+    this.messages = config.messages || {};
+
+    const savedLocale =
+      typeof window !== "undefined" && config.persistKey
+        ? (localStorage.getItem(config.persistKey) as L | null)
+        : null;
+
+    if (savedLocale && config.supportedLocales.includes(savedLocale)) {
+      this.locale = savedLocale;
+    } else {
+      this.locale = config.locale;
+    }
+  }
+
+  public async init() {
+    if (this.config.loader && !this.messages[this.locale]) {
+      await this.fetchLocale(this.locale);
+    }
+  }
+
+  private async fetchLocale(locale: L) {
+    this.isLoading = true;
+    this.store.notify();
+
+    try {
+      const data = await this.config.loader!(locale);
+      this.messages[locale] = { ...this.messages[locale], ...data };
+    } catch (e) {
+      console.error(`Failed to load locale: ${locale}`, e);
+    } finally {
+      this.isLoading = false;
+      this.store.notify();
+    }
   }
 
   get currentLocale() {
     return this.locale;
   }
 
-  setLocale = (locale: string) => {
+  subscribe = this.store.subscribe;
+
+  setLocale = async (locale: L) => {
+    if (this.config.loader && !this.messages[locale]) {
+      this.isLoading = true;
+      this.store.notify();
+
+      try {
+        const data = await this.config.loader(locale);
+        this.messages[locale] = data;
+      } catch (e) {
+        console.error(`Failed to load locale: ${locale}`, e);
+      } finally {
+        this.isLoading = false;
+      }
+    }
+
     this.locale = locale;
+
+    if (this.config.persistKey && typeof window !== "undefined") {
+      localStorage.setItem(this.config.persistKey, locale);
+    }
+
     this.store.notify();
   };
-
-  subscribe = this.store.subscribe;
 
   private getMessage<K extends DeepKeys<T>>(
     key: K,
   ): DeepValue<T, K> | undefined {
-    return key
-      .split(".")
-      .reduce((o, k) => o?.[k], this.messages[this.locale]) as
-      | DeepValue<T, K>
-      | undefined;
+    const localesToCheck = [
+      this.locale,
+      ...(this.config.fallbackLocales || []),
+    ];
+
+    const path = (key as string).split(/[:.]/);
+    for (const l of localesToCheck) {
+      if (!this.messages[l]) continue;
+
+      const msg = path.reduce((o, k) => o?.[k], this.messages[l]) as
+        | DeepValue<T, K>
+        | undefined;
+
+      if (msg !== undefined) return msg;
+    }
+
+    return undefined;
   }
 
   t<K extends DeepKeys<T>>(

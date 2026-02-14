@@ -7,13 +7,18 @@ import {
 import { I18n } from "../core/engine";
 import type { LocaleMessages } from "../core/types";
 
-export function createContextI18n<T extends LocaleMessages>(
-  engine: I18n<T>,
+export function createContextI18n<T extends LocaleMessages, L extends string>(
+  engine: I18n<T, L>,
 ) {
-  const Ctx = createContext<I18n<T> | null>(null);
+  const Ctx = createContext<I18n<T, L> | null>(null);
 
   function Provider({ children }: { children: ReactNode }) {
-    useSyncExternalStore(engine.subscribe, () => engine.currentLocale);
+    useSyncExternalStore(
+      engine.subscribe,
+      () => `${engine.currentLocale}-${engine.isLoading}`,
+      () => `${engine.currentLocale}-${engine.isLoading}`,
+    );
+
     return <Ctx.Provider value={engine}>{children}</Ctx.Provider>;
   }
 
@@ -23,11 +28,17 @@ export function createContextI18n<T extends LocaleMessages>(
       throw new Error("useLocale must be used inside Provider");
     }
 
-    useSyncExternalStore(ctx.subscribe, () => ctx.currentLocale);
+    useSyncExternalStore(
+      ctx.subscribe,
+      () => `${ctx.currentLocale}-${ctx.isLoading}`,
+      () => `${ctx.currentLocale}-${ctx.isLoading}`,
+    );
+
     return {
       t: ctx.t.bind(ctx),
       locale: ctx.currentLocale,
       setLocale: ctx.setLocale,
+      isLoading: ctx.isLoading,
     };
   }
 

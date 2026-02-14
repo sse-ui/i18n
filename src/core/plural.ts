@@ -1,10 +1,4 @@
-export type PluralForms = {
-  one?: string;
-  two?: string;
-  few?: string;
-  many?: string;
-  other: string;
-};
+import { PluralForms } from "./types";
 
 export function resolvePlural(
   locale: string,

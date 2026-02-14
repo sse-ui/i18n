@@ -3,12 +3,23 @@ import { I18n } from "./core/engine";
 import { createUseTranslation } from "./react/createUseTranslation";
 import { createContextI18n } from "./react/createContextI18n";
 
-export function createI18n<L extends string, T extends LocaleMessages>(
-  locale: string,
-  messages: Record<L, T>,
-) {
-  // Cast the inner message payload so the engine constructor stays happy
-  const engine = new I18n<T>(locale, messages as unknown as Record<string, T>);
+export function createI18n<
+  const TLocale extends string,
+  const TSupported extends readonly string[],
+  const TMessages extends LocaleMessages,
+>(config: {
+  locale: TLocale;
+  supportedLocales: TSupported;
+  messages: TMessages;
+  fallbackLocales?: TSupported[number][];
+  persistKey?: string;
+  loader?: (locale: TSupported[number]) => Promise<any>;
+}) {
+  type T = TMessages[TLocale];
+  type AllowedLocales = TSupported[number];
+
+  const engine = new I18n<T, AllowedLocales>(config);
+  engine.init();
 
   return {
     i18n: engine,
