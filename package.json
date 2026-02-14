@@ -5,12 +5,12 @@
   "license": "MIT",
   "author": "SSE Official",
   "type": "module",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {
