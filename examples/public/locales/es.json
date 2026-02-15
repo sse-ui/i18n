@@ -1,10 +1,10 @@
 {
   "app": {
     "title": "i18n Avanzado",
-    "welcome": "Bienvenido {name}",
+    "welcome": "Bienvenido {{name}} {{last?}}",
     "items": {
-      "one": "{count} artículo",
-      "other": "{count} artículos"
+      "one": "{{count}} artículo",
+      "other": "{{count}} artículos"
     },
     "switch": "Cambiar Idioma"
   }

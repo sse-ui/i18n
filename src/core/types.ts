@@ -44,8 +44,14 @@ export type PluralForms = {
   other: string;
 };
 
-type ExtractTokens<S> = S extends `${string}{${infer P}}${infer R}`
-  ? P | ExtractTokens<R>
+type Trim<S extends string> = S extends ` ${infer R}`
+  ? Trim<R>
+  : S extends `${infer L} `
+    ? Trim<L>
+    : S;
+
+type ExtractTokens<S> = S extends `${string}{{${infer P}}}${infer R}`
+  ? Trim<P> | ExtractTokens<R>
   : never;
 
 type ExtractReqVars<S> =
