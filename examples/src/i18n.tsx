@@ -9,7 +9,7 @@ export const { i18n, useTranslation, Provider, useLocale } = createI18n({
     en: {
       app: {
         title: "Advanced i18n",
-        welcome: "Welcome {name}",
+        welcome: "Welcome {name} {last?}",
         items: {
           one: "{count} item",
           other: "{count} items",

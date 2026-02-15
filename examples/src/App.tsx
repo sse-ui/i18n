@@ -9,7 +9,7 @@ export default function App() {
     <div>
       <h1>{t("app:title")}</h1>
 
-      <p>{t("app:welcome", { name: "SSE" })}</p>
+      <p>{t("app:welcome", { name: "SSE", last: undefined })}</p>
       <p>{t("app:items", { count })}</p>
 
       <button onClick={() => setCount((c) => c + 1)}>+</button>
@@ -29,12 +29,7 @@ export default function App() {
         </div>
       )}
 
-      <div>
-        {t("agree", {
-          terms: (chunk) => <strong>{chunk}</strong>,
-          privacy: (chunk) => <a>{chunk}</a>,
-        })}
-      </div>
+      <div>{t("agree")}</div>
     </div>
   );
 }
