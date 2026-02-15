@@ -117,7 +117,11 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
 
   t<K extends DeepKeys<T>>(
     key: K,
-    ...args: ParamsOf<T, K> extends undefined ? [] : [params: ParamsOf<T, K>]
+    ...args: ParamsOf<T, K> extends undefined
+      ? []
+      : {} extends ParamsOf<T, K>
+        ? [params?: ParamsOf<T, K>]
+        : [params: ParamsOf<T, K>]
   ): ReactNode {
     const msg = this.getMessage(key);
     if (!msg) return key as string;

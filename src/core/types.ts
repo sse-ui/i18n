@@ -36,18 +36,6 @@ export type DeepValue<T, K extends string, Depth extends number = 5> = [
         ? T[K]
         : never;
 
-type ExtractVars<S> = S extends `${string}{${infer P}}${infer R}`
-  ? P | ExtractVars<R>
-  : never;
-
-type ExtractTags<S> = S extends `${string}<${infer T}>${infer R}`
-  ? T extends `/${string}`
-    ? ExtractTags<R>
-    : T | ExtractTags<R>
-  : never;
-
-type ExtractParams<S> = ExtractVars<S> | ExtractTags<S>;
-
 export type PluralForms = {
   one?: string;
   two?: string;
@@ -56,13 +44,40 @@ export type PluralForms = {
   other: string;
 };
 
-type ExtractPluralParams<T> = T extends PluralForms
-  ?
-      | ExtractParams<T["other"]>
-      | ExtractParams<T["one"]>
-      | ExtractParams<T["two"]>
-      | ExtractParams<T["few"]>
-      | ExtractParams<T["many"]>
+type ExtractTokens<S> = S extends `${string}{${infer P}}${infer R}`
+  ? P | ExtractTokens<R>
+  : never;
+
+type ExtractReqVars<S> =
+  ExtractTokens<S> extends infer V
+    ? V extends `${string}?`
+      ? never
+      : V
+    : never;
+
+type ExtractOptVars<S> =
+  ExtractTokens<S> extends infer V
+    ? V extends `${infer Name}?`
+      ? Name
+      : never
+    : never;
+
+type ExtractTags<S> = S extends `${string}<${infer T}>${infer R}`
+  ? T extends `/${string}`
+    ? ExtractTags<R>
+    : T | ExtractTags<R>
+  : never;
+
+type ExtractAllReqVars<T> = T extends PluralForms
+  ? ExtractReqVars<T["other"] | T["one"] | T["two"] | T["few"] | T["many"]>
+  : never;
+
+type ExtractAllOptVars<T> = T extends PluralForms
+  ? ExtractOptVars<T["other"] | T["one"] | T["two"] | T["few"] | T["many"]>
+  : never;
+
+type ExtractAllTags<T> = T extends PluralForms
+  ? ExtractTags<T["other"] | T["one"] | T["two"] | T["few"] | T["many"]>
   : never;
 
 export type ParamValue =
@@ -73,11 +88,38 @@ export type ParamValue =
   | undefined
   | ((children: ReactNode) => ReactNode);
 
+type Simplify<T> = { [K in keyof T]: T[K] } & {};
+
+type CheckUndefined<Req, Opt> = [Req] extends [never]
+  ? [Opt] extends [never]
+    ? undefined
+    : Simplify<Partial<Record<Opt & string, ParamValue>>>
+  : Simplify<
+      Record<Req & string, ParamValue> &
+        Partial<Record<Opt & string, ParamValue>>
+    >;
+
 export type ParamsOf<T, K extends DeepKeys<T>> =
   DeepValue<T, K> extends string
-    ? ExtractParams<DeepValue<T, K>> extends never
-      ? undefined
-      : Record<ExtractParams<DeepValue<T, K>>, ParamValue>
+    ? CheckUndefined<
+        ExtractReqVars<DeepValue<T, K>>,
+        ExtractOptVars<DeepValue<T, K>> | ExtractTags<DeepValue<T, K>>
+      >
     : DeepValue<T, K> extends PluralForms
-      ? Record<ExtractPluralParams<DeepValue<T, K>> | "count", ParamValue>
+      ? Simplify<
+          Record<
+            "count" | (ExtractAllReqVars<DeepValue<T, K>> & string),
+            ParamValue
+          > &
+            Partial<
+              Record<
+                (
+                  | ExtractAllOptVars<DeepValue<T, K>>
+                  | ExtractAllTags<DeepValue<T, K>>
+                ) &
+                  string,
+                ParamValue
+              >
+            >
+        >
       : undefined;
