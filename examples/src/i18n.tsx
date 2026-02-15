@@ -9,16 +9,16 @@ export const { i18n, useTranslation, Provider, useLocale } = createI18n({
     en: {
       app: {
         title: "Advanced i18n",
-        welcome: "Welcome {name} {last?}",
+        welcome: "Welcome {{ name }} {{ last? }}",
         items: {
-          one: "{count} item",
-          other: "{count} items",
+          one: "{{count}} item",
+          other: "{{count}} items",
         },
         switch: "Switch Language",
       },
 
       agree:
-        "I accept the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
+        "I accept the <terms>Terms</terms> and <link>Privacy Policy</link>.",
     },
     // fr: {
     //   app: {
