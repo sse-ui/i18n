@@ -2,18 +2,49 @@
   "name": "@sse-ui/i18n",
   "version": "1.0.0",
   "description": "i18n By SSE Universe",
+  "homepage": "https://github.com/sse-ui/i18n#readme",
+  "bugs": {
+    "url": "https://github.com/sse-ui/i18n/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sse-ui/i18n.git"
+  },
   "license": "MIT",
   "author": "SSE Official",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "directories": {
+    "example": "examples"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "prepublish": "tsup"
+  },
+  "dependencies": {
+    "react": "^19.2.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
-  "dependencies": {
-    "react": "^19.2.4"
-  }
+  "module": "./dist/index.js"
 }

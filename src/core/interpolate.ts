@@ -1,5 +1,22 @@
 import { createElement, type ReactNode } from "react";
 
+const VOID_ELEMENTS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
 const isRenderProp = (val: any): val is (children: ReactNode) => ReactNode =>
   typeof val === "function";
 
@@ -8,7 +25,9 @@ export function interpolate(
   params?: Record<string, any>,
 ): ReactNode {
   const p = params || {};
-  const tokens = message.split(/(\{[\w]+\??\}|<[\w]+>|<\/[\w]+>)/g);
+
+  // UPDATED: Regex now matches {{var}}, {{ var }}, {{ var? }}
+  const tokens = message.split(/(\{\{\s*[\w]+\??\s*\}\}|<[\w]+>|<\/[\w]+>)/g);
 
   const stack: ReactNode[][] = [[]];
   const tags: string[] = [];
@@ -17,9 +36,13 @@ export function interpolate(
   tokens.forEach((token) => {
     if (!token) return;
 
-    if (token.match(/^\{(\w+)\??\}$/)) {
-      const isOptional = token.endsWith("?}");
-      const key = token.slice(1, isOptional ? -2 : -1);
+    // UPDATED: Match the token and safely extract the variable name without spaces
+    const varMatch = token.match(/^\{\{\s*(\w+)(\??)\s*\}\}$/);
+
+    if (varMatch) {
+      // HANDLE VARIABLES
+      const key = varMatch[1]; // The variable name (e.g., "name")
+      const isOptional = varMatch[2] === "?"; // True if it has a '?'
       const val = p[key];
       const currentChildren = stack[stack.length - 1];
 
@@ -29,11 +52,33 @@ export function interpolate(
         currentChildren.push(isOptional ? "" : token);
       }
     } else if (token.match(/^<(\w+)>$/)) {
-      const tagName = token.slice(1, -1);
+      // OPEN TAG
+      const rawTagName = token.slice(1, -1);
+      const tagName = rawTagName.toLowerCase();
+      const currentChildren = stack[stack.length - 1];
+
+      if (VOID_ELEMENTS.has(tagName)) {
+        const renderFn = p[rawTagName] || p[tagName];
+        if (isRenderProp(renderFn)) {
+          currentChildren.push(renderFn(""));
+        } else {
+          currentChildren.push(
+            createElement(tagName, { key: `tag-${elementKey++}` }),
+          );
+        }
+        return;
+      }
+
       tags.push(tagName);
       stack.push([]);
     } else if (token.match(/^<\/(\w+)>$/)) {
-      const tagName = token.slice(2, -1);
+      // CLOSE TAG
+      const rawTagName = token.slice(2, -1);
+      const tagName = rawTagName.toLowerCase();
+
+      if (VOID_ELEMENTS.has(tagName)) {
+        return;
+      }
 
       if (tags.length === 0 || tags[tags.length - 1] !== tagName) {
         stack[stack.length - 1].push(token);
@@ -42,7 +87,7 @@ export function interpolate(
 
       tags.pop();
       const children = stack.pop()!;
-      const renderFn = p[tagName];
+      const renderFn = p[rawTagName] || p[tagName];
       const currentChildren = stack[stack.length - 1];
 
       if (isRenderProp(renderFn)) {
@@ -57,6 +102,7 @@ export function interpolate(
         );
       }
     } else {
+      // PLAIN TEXT
       stack[stack.length - 1].push(token);
     }
   });

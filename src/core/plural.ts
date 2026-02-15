@@ -5,6 +5,11 @@ export function resolvePlural(
   count: number,
   forms: PluralForms,
 ) {
-  const rule = new Intl.PluralRules(locale).select(count);
-  return forms[rule as keyof PluralForms] ?? forms.other;
+  try {
+    const rule = new Intl.PluralRules(locale).select(count);
+    return forms[rule as keyof PluralForms] ?? forms.other;
+  } catch (error) {
+    console.warn(`Invalid locale for PluralRules: ${locale}`);
+    return forms.other;
+  }
 }

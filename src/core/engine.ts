@@ -54,7 +54,10 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
 
     try {
       const data = await this.config.loader!(locale);
-      this.messages[locale] = { ...this.messages[locale], ...data };
+      this.messages[locale] = {
+        ...(this.messages[locale] || {}),
+        ...data,
+      };
     } catch (e) {
       console.error(`Failed to load locale: ${locale}`, e);
     } finally {
@@ -70,18 +73,13 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
   subscribe = this.store.subscribe;
 
   setLocale = async (locale: L) => {
-    if (this.config.loader && !this.messages[locale]) {
-      this.isLoading = true;
-      this.store.notify();
+    if (!this.config.supportedLocales.includes(locale)) {
+      console.warn(`Locale "${locale}" is not supported.`);
+      return;
+    }
 
-      try {
-        const data = await this.config.loader(locale);
-        this.messages[locale] = data;
-      } catch (e) {
-        console.error(`Failed to load locale: ${locale}`, e);
-      } finally {
-        this.isLoading = false;
-      }
+    if (this.config.loader && !this.messages[locale]) {
+      await this.fetchLocale(locale);
     }
 
     this.locale = locale;
@@ -103,9 +101,9 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
 
     const path = (key as string).split(/[:.]/);
     for (const l of localesToCheck) {
-      if (!this.messages[l]) continue;
+      if (!this.messages[l as string]) continue;
 
-      const msg = path.reduce((o, k) => o?.[k], this.messages[l]) as
+      const msg = path.reduce((o, k) => o?.[k], this.messages[l as string]) as
         | DeepValue<T, K>
         | undefined;
 
