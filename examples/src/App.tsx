@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useTranslation } from "./i18n";
+import { useLocale } from "./i18n";
 
 export default function App() {
-  const { t, setLocale, locale, isLoading } = useTranslation();
+  const { t, setLocale, locale, isLoading } = useLocale();
   const [count, setCount] = useState(1);
 
   return (
