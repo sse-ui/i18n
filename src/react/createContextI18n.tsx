@@ -28,6 +28,12 @@ export function createContextI18n<T extends LocaleMessages, L extends string>(
       throw new Error("useLocale must be used inside Provider");
     }
 
+    useSyncExternalStore(
+      engine.subscribe,
+      () => `${engine.currentLocale}-${engine.isLoading}`,
+      () => `${engine.currentLocale}-${engine.isLoading}`,
+    );
+
     return {
       t: ctx.t.bind(ctx),
       locale: ctx.currentLocale,
