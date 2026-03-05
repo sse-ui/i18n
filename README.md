@@ -26,42 +26,52 @@ yarn add @sse-ui/i18n
 Create a configuration file (e.g., `src/i18n.ts`). This is where you define your default language and how to load others.
 
 ```typescript
-import { createI18n } from "@sse-ui/i18n";
+import { createI18n, defineLocale } from "../../src";
+
+const en = defineLocale({
+  name: "English",
+  code: "en",
+  messages: {
+    app: {
+      title: "Advanced i18n",
+      welcome: "Welcome {{ name }} {{ last? }}",
+      items: {
+        one: "{{count}} item",
+        other: "{{count}} items",
+      },
+      switch: "Switch Language",
+    },
+
+    agree: "I accept the <terms>Terms</terms> and <link>Privacy Policy</link>.",
+  },
+});
+
+const es = defineLocale({
+  name: "Español",
+  code: "es",
+  dir: "ltr",
+  messages: {
+    app: {
+      title: "Advanced i18n",
+      welcome: "Welcome {{ name }} {{ last? }}",
+      items: {
+        one: "{{count}} item",
+        other: "{{count}} items",
+      },
+      switch: "Switch Language",
+    },
+
+    agree: "I accept the <terms>Terms</terms> and <link>Privacy Policy</link>.",
+  },
+});
 
 export const { i18n, useTranslation, Provider, useLocale } = createI18n({
   locale: "en",
-  supportedLocales: ["en", "es", "fr"],
+  supportedLocales: ["en", "es"],
   persistKey: "i18n-locale",
+  locales: [en, es],
   fallbackLocales: ["en"],
-  messages: {
-    en: {
-      app: {
-        title: "Advanced i18n",
-        welcome: "Welcome {{ name }} {{ last? }}",
-        items: {
-          one: "{{count}} item",
-          other: "{{count}} items",
-        },
-        switch: "Switch Language",
-      },
 
-      agree:
-        "I accept the <terms>Terms</terms> and <link>Privacy Policy</link>.",
-    },
-    // fr: {
-    //   app: {
-    //     title: "i18n Avancé",
-    //     welcome: "Bienvenue {name}",
-    //     items: {
-    //       one: "{count} article",
-    //       other: "{count} articles",
-    //     },
-    //     switch: "Changer de langue",
-    //   },
-    // },
-  },
-
-  // Not necessary to use it
   loader: async (locale) => {
     // await new Promise((resolve) => setTimeout(resolve, 1000));
     const res = await fetch(`/locales/${locale}.json`);
@@ -71,6 +81,7 @@ export const { i18n, useTranslation, Provider, useLocale } = createI18n({
     return res.json();
   },
 });
+
 ```
 
 ### 2. Wrap your Application
