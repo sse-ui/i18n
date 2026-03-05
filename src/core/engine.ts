@@ -1,19 +1,21 @@
 import type {
   DeepKeys,
   DeepValue,
+  Locale,
   LocaleMessages,
   ParamsOf,
   PluralForms,
+  Direction,
 } from "./types";
 import { LocaleStore } from "./store";
 import { interpolate } from "./interpolate";
 import { resolvePlural } from "./plural";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
-interface I18nConfig<T, L extends string> {
+interface I18nConfig<T extends LocaleMessages, L extends string> {
   locale: L;
   supportedLocales: readonly L[];
-  messages: LocaleMessages;
+  locales: Locale<T>[];
   fallbackLocales?: L[];
   persistKey?: string;
   loader?: (locale: string) => Promise<any>;
@@ -21,14 +23,19 @@ interface I18nConfig<T, L extends string> {
 
 export class I18n<T extends LocaleMessages, L extends string = string> {
   private locale: L;
-  private messages: LocaleMessages;
+  private messages: Record<string, T> = {};
+  private localeMeta: Map<string, { name: string; dir: Direction }> = new Map();
   private store = new LocaleStore();
   private config: I18nConfig<T, L>;
   public isLoading = false;
 
   constructor(config: I18nConfig<T, L>) {
     this.config = config;
-    this.messages = config.messages || {};
+
+    config.locales.forEach((loc) => {
+      this.messages[loc.code] = loc.messages;
+      this.localeMeta.set(loc.code, { name: loc.name, dir: loc.dir });
+    });
 
     const savedLocale =
       typeof window !== "undefined" && config.persistKey
@@ -68,6 +75,14 @@ export class I18n<T extends LocaleMessages, L extends string = string> {
 
   get currentLocale() {
     return this.locale;
+  }
+
+  get direction(): Direction {
+    return this.localeMeta.get(this.locale)?.dir || "ltr";
+  }
+
+  get localeName(): string {
+    return this.localeMeta.get(this.locale)?.name || this.locale;
   }
 
   subscribe = this.store.subscribe;

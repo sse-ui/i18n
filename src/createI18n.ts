@@ -1,4 +1,4 @@
-import type { LocaleMessages } from "./core/types";
+import type { Locale, LocaleMessages } from "./core/types";
 import { I18n } from "./core/engine";
 import { createUseTranslation } from "./react/createUseTranslation";
 import { createContextI18n } from "./react/createContextI18n";
@@ -10,15 +10,14 @@ export function createI18n<
 >(config: {
   locale: TLocale;
   supportedLocales: TSupported;
-  messages: TMessages;
+  locales: Locale<TMessages>[];
   fallbackLocales?: TSupported[number][];
   persistKey?: string;
   loader?: (locale: TSupported[number]) => Promise<any>;
 }) {
-  type T = TMessages[TLocale];
-  type AllowedLocales = TSupported[number];
+  // type AllowedLocales = TSupported[number];
 
-  const engine = new I18n<T, AllowedLocales>(config);
+  const engine = new I18n<TMessages, TSupported[number]>(config);
   engine.init();
 
   return {

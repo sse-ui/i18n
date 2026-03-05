@@ -1,4 +1,4 @@
-import { PluralForms } from "./types";
+import type { PluralForms } from "./types";
 
 export function resolvePlural(
   locale: string,

@@ -1,8 +1,16 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export type Primitive = string | number | boolean | null | undefined;
 type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7];
 export type LocaleMessages = Record<string, any>;
+export type Direction = "ltr" | "rtl";
+
+export type Locale<M extends LocaleMessages = LocaleMessages> = {
+  name: string;
+  code: string;
+  dir: Direction;
+  messages: M;
+};
 
 export type DeepKeys<
   T,
